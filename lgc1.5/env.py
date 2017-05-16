@@ -35,10 +35,10 @@ female_original = np.concatenate((female_read, zeros))
 male_original = male_read
 print(female_original.shape[0])
 
-# 归一化设置
+# 归一化设置 (范围是-1到1 ，平方和为1）
 male_original = male_original/np.sqrt(np.sum(male_original*male_original))
 female_original = female_original/np.sqrt(np.sum(female_original*female_original))
-mix = female_original + male_original
+mix = female_original + male_original #直接混合，线性相加
 
 # 对混合的语音进行STFT短时傅里叶变换，输出的结果是矩阵（语谱图），形状大小是（257，帧数）
 w = F_S

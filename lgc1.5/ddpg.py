@@ -15,7 +15,7 @@ from keras.optimizers import  Adam
 # from t_separate import separate
 import json
 from env import first_state
-from env import  separate
+from env import separate
 from env import pro_wav
 import argparse
 import h5py
