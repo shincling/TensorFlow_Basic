@@ -133,7 +133,7 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
 
             # y_t = []
 
-            # 根据新的状态预测动作，然后在critc中输入（新状态，新新动作），产生Q
+            # 根据新的状态预测动作，然后在critc中输入（新状态，新新动作），产生Q  TODO-shin:这块critic的model的输入是俩，后面可能得结合AC算法原文搞一下
             target_q_values = critic.target_model.predict([new_states,(actor.target_model.predict(new_states))])
 
             for k in range(len(batch)):
