@@ -23,7 +23,7 @@ import h5py
 
 OU = OU()
 
-def speech_separate(train_indicator=0):         #train_indicator = 0 means simply run ,1 means train
+def speech_separate(train_indicator=0):#train_indicator = 0 means simply run ,1 means train
     BUFFER_SIZE = 1000
     BATCH_SIZE = 32
     GAMMA = 0.99
@@ -90,7 +90,7 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
         total_reward = 0.
 
         # 记载初始状态
-        s_t = first_state
+        s_t = first_state # 3*257
 
         for j in range(max_steps):
             loss = 0
@@ -109,15 +109,14 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
             # if the design is such,every action'change is the same
             # a_t[0] = a_t_original[0] + noise_t[0]
 
-            # 对动作值二值化
-            a_t[0] = a_t_original[0]
+            # 对动作值取边界，限定在0到1之间
+            a_t[0] = a_t_original[0] # 1,257 to 257
             for m in range(a_t[0].shape[0]):
                 if a_t[0][m] >= 1:
                     a_t[0][m] = 1
                 if a_t[0][m] < 0:
                     a_t[0][m] = 0
 
-            # a_t[0] = a_t_original
             # 根据动作（mask），去分离语音，得到(下一个状态，奖励，是否完成整条语音分离)
             s_t1,r_t,done = separate(a_t[0], j)
 
@@ -157,6 +156,7 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
 
             total_reward += r_t
             s_t = s_t1
+            # print s_t[:,0:3],'\n' #有更新的，待会赵一下怎么弄出来的
 
             # a_t[0,0:5]是输出当前动作的前五位数值
             print("Episode", i, "Step", step, "Action", a_t[0,0:5], "Reward", r_t, "Loss", loss)
@@ -165,6 +165,7 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
 
             # 如果整条的语句分离完成了，则测试整条语音的分离情况
             if done:
+                print 'This speech Done.'
                 pro_wav()
                 break
 
