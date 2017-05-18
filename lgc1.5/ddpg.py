@@ -141,6 +141,7 @@ def speech_separate(train_indicator=0):#train_indicator = 0 means simply run ,1 
                     # y_t.append(rewards[k])
                 else:
                     y_t[k] = rewards[k] + GAMMA*target_q_values[k]
+                    #TODO:这里是在是得考虑一下，reward是一个数，每一帧一个。但是target_q_value（也就是critic网络的输出，是一个向量（每一帧有273个）能不能直接加，得想一下
                     # y_t.append(rewards[k] + GAMMA*target_q_values[k])
 
             # y_t = np.resize(y_t, [len(y_t), 1])
