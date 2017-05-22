@@ -151,6 +151,7 @@ def speech_separate(train_indicator=0):#train_indicator = 0 means simply run ,1 
                 loss += critic.model.train_on_batch([states, actions], y_t)
                 a_for_grad = actor.model.predict(states)
                 grads = critic.gradients(states, a_for_grad)
+                # print('grads', grads[:5])
                 actor.train(states,grads)
                 actor.target_train()
                 critic.target_train()
