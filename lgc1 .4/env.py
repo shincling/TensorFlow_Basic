@@ -81,7 +81,7 @@ def separate(action, i):
     reward = sum(-abs(action - data_target[i]))
 
     print ('reward', reward)
-    reward = reward/128
+    reward = 1+reward/128
 
     # 这部分操作是讲每一帧的action都保存下来，方便对比目标action
     global action_matrix
@@ -109,7 +109,8 @@ def separate(action, i):
     global out_wav
 
     # 这部分是如果整条语音分离完毕，保存所有的action
-    if (i == (mix_spec.shape[0]-1)):
+    # if (i == (mix_spec.shape[0]-1)):
+    if (i == 0):
         done = True
 
         global mask

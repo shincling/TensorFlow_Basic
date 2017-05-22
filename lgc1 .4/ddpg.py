@@ -17,6 +17,7 @@ import json
 from env import first_state
 from env import  separate
 from env import pro_wav
+from env import mask
 import argparse
 import h5py
 import gym
@@ -37,8 +38,8 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
     GAMMA = 0.99
     GAMMA = 1
     TAU = 0.001
-    LRA = 0.00001
-    LRC = 0.00001
+    LRA = 0.0005
+    LRC = 0.01
 
     action_size = 257
     state_size = 771
@@ -47,11 +48,11 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
     EXPLORE = 2000
     # episode_count = 2000
     if train_indicator == 0:   #only separate
-        episode_count = 101
+        episode_count = 500
     else:
-        episode_count = 101
+        episode_count = 500
 
-    max_steps = 1000
+    max_steps = 1
     done = False
     step = 0
     epsilon = 1
@@ -103,9 +104,12 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
             # noise_t[0][1] = train_indicator * max(epsilon, 0) * OU.function(a_t_original[0][1], 0.5, 1.00, 0.10)
             # noise_t[0][2] = train_indicator * max(epsilon, 0) * OU.function(a_t_original[0][2], -0.1, 1.00, 0.05)
 
-            noise_t[0] = [train_indicator * max(epsilon, 0) * OU.function(a_t_o, 0.5, 1, 0.1) for a_t_o in a_t_original[0]]
+            noise_t[0] = [train_indicator * max(epsilon, 0) * OU.function(a_t_o, 0.5, 0.1, 0.1) for a_t_o in a_t_original[0]]
             # if the design is such,every action'change is the same
             a_t[0] = a_t_original[0] + noise_t[0]
+            # a_t[0] = a_t_original[0]
+            if buff.num_experiences<3*BATCH_SIZE:
+                a_t[0] = mask[0]# + noise_t[0]
 
             # a_t[0] = a_t_original[0]
             # for m in range(a_t[0].shape[0]):
@@ -116,8 +120,12 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
 
             # a_t[0] = a_t_original
             s_t1, r_t, done = separate(a_t[0], j)
-
-            buff.add(s_t, a_t[0], r_t, s_t1, done)
+            if r_t<0.9:
+                if buff.num_experiences<BATCH_SIZE:
+                    break
+            else:
+                print 'Save 1 in buffer ! a_t:{},r_t:{},buff_size:{}'.format(a_t[0,:5],r_t,buff.num_experiences)
+                buff.add(s_t, a_t[0], r_t, s_t1, done)
             batch = buff.getbatch(BATCH_SIZE)
             states = np.asarray([e[0] for e in batch])
             actions = np.asarray([e[1] for e in batch])
@@ -142,9 +150,17 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
             # y_t = np.resize(y_t, [len(y_t), 1])
 
             # print('y_t', y_t)
+            if buff.num_experiences<3*BATCH_SIZE:
+                continue
+
             if (train_indicator):
                 loss += critic.model.train_on_batch([states, actions], y_t) #这里为什么是+，感觉乐于问题
+                if loss>0.5:
+                    for jj in range(50):
+                        print '50 times %d'%jj
+                        critic.model.train_on_batch([states, actions], y_t) #这里为什么是+，感觉乐于问题
                 a_for_grad = actor.model.predict(states) #BS*257这么大
+                # a_for_grad = actions #BS*257这么大
                 # print('a_for_grad', a_for_grad[0:5])
                 grads = critic.gradients(states, a_for_grad)
                 #得到的grads是BS*257，不知道这个257的意义是啥，怎么弄初来的。
@@ -153,6 +169,9 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
                 actor.train(states,grads)
                 actor.target_train()
                 critic.target_train()
+                print '\n'
+                print('weights',sess.run(actor.weights[0][:5,:5]))
+                print '\n'
 
             total_reward += r_t
             s_t = s_t1
@@ -163,7 +182,8 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
 
             if done:
                 if i % 5 == 0:
-                    pro_wav()
+                    pass
+                    # pro_wav()
 
                 break
 
