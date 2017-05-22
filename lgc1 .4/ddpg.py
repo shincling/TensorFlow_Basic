@@ -35,6 +35,7 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
     BUFFER_SIZE = 1000
     BATCH_SIZE = 32
     GAMMA = 0.99
+    GAMMA = 1
     TAU = 0.001
     LRA = 0.00001
     LRC = 0.00001
@@ -50,7 +51,7 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
     else:
         episode_count = 101
 
-    max_steps = 10000
+    max_steps = 1000
     done = False
     step = 0
     epsilon = 1
@@ -142,10 +143,11 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
 
             # print('y_t', y_t)
             if (train_indicator):
-                loss += critic.model.train_on_batch([states, actions], y_t)
-                a_for_grad = actor.model.predict(states)
+                loss += critic.model.train_on_batch([states, actions], y_t) #这里为什么是+，感觉乐于问题
+                a_for_grad = actor.model.predict(states) #BS*257这么大
                 # print('a_for_grad', a_for_grad[0:5])
                 grads = critic.gradients(states, a_for_grad)
+                #得到的grads是BS*257，不知道这个257的意义是啥，怎么弄初来的。
                 # print('grads', grads[0:5])
                 print('grads', grads.shape)
                 actor.train(states,grads)

@@ -1,3 +1,4 @@
+# coding:utf-8
 import numpy as np
 from keras.models import Sequential, Model
 from keras.layers import Dense, merge,Activation,Input,Bidirectional,TimeDistributed,LSTM, BatchNormalization
@@ -18,7 +19,7 @@ class CriticNetwork(object):
 
         self.model,self.action,self.state = self.create_critic_network(state_size, action_size)
         self.target_model,self.target_action,self.target_state = self.create_critic_network(state_size, action_size)
-        self.action_grads = tf.gradients(self.model.output,self.action)
+        self.action_grads = tf.gradients(self.model.output,self.action) #output应该是输出：也是Bs×257这么大的，注意,output或者action都知识一个tensor，所以这个语句最后的输出是一个只包含一个元素的列表（）
         self.sess.run(tf.global_variables_initializer())
 
     def gradients(self,states,actions):
@@ -26,7 +27,6 @@ class CriticNetwork(object):
             self.state: states,
             self.action: actions
         })[0]
-    #[0] what's the meaming
 
     def target_train(self):
         critic_weights = self.model.get_weights()
