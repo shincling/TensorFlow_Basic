@@ -38,8 +38,8 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
     GAMMA = 0.99
     GAMMA = 1
     TAU = 0.001
-    LRA = 0.0005
-    LRC = 0.01
+    LRA = 0.005
+    LRC = 0.01 #这个还真不能太高 高了就收敛不了了
 
     action_size = 257
     state_size = 771
@@ -50,7 +50,7 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
     if train_indicator == 0:   #only separate
         episode_count = 500
     else:
-        episode_count = 500
+        episode_count = 300
 
     max_steps = 1
     done = False
@@ -133,6 +133,7 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
             new_states = np.asarray([e[3] for e in batch])
             dones = np.asarray([e[4] for e in batch])
             y_t = np.asarray([e[1] for e in batch])
+            y_t = np.asarray([e[2] for e in batch])
 
             # y_t = []
 
@@ -164,7 +165,7 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
                 # print('a_for_grad', a_for_grad[0:5])
                 grads = critic.gradients(states, a_for_grad)
                 #得到的grads是BS*257，不知道这个257的意义是啥，怎么弄初来的。
-                # print('grads', grads[0:5])
+                print('grads', grads[0:5])
                 print('grads', grads.shape)
                 actor.train(states,grads)
                 actor.target_train()

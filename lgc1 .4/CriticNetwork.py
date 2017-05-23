@@ -89,11 +89,11 @@ class CriticNetwork(object):
 
         S = Input(shape=[3,257])
         A = Input(shape=[action_size], name='action2')
-        lb1 = Bidirectional(LSTM(100,return_sequences=False,input_shape=(3,257)))(S)
+        lb1 = Bidirectional(LSTM(200,return_sequences=False,input_shape=(3,257)))(S)
         s1 = Dense(300, activation='tanh')(lb1)
         a1 = Dense(300, activation='tanh')(A)
         m = merge([s1, a1], mode='concat') #TODO：上面三行merge的话，感觉就是一个dense(600)就可以了啊
-        V = Dense(action_size, activation='relu')(m)
+        V = Dense(1, activation='sigmoid')(m)
         model = Model(input=[S, A], output=V)
         adam = Adam(lr=self.LEARNING_RATE)
         model.compile(loss='mse', optimizer=adam)
