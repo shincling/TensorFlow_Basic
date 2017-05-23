@@ -20,6 +20,7 @@ class ActorNetwork(object):
         self.params_grad = tf.gradients(self.model.output, self.weights, self.action_gradient)
         grads = zip(self.params_grad, self.weights)
         # self.optimize = tf.train.AdamOptimizer(LEARNING_RATE).apply_gradients(grads)
+        # self.optimize = tf.train.AdadeltaOptimizer(LEARNING_RATE).apply_gradients(grads)
         self.optimize = tf.train.AdadeltaOptimizer(LEARNING_RATE).apply_gradients(grads)
         self.sess.run(tf.global_variables_initializer())
 
@@ -82,11 +83,14 @@ class ActorNetwork(object):
         bl1 = Bidirectional(LSTM(100, return_sequences=True, input_shape=(3, 257), kernel_initializer='lecun_uniform'))(S)
         # kernel_initializer='random_uniform'
         bl2 = Bidirectional(LSTM(100, return_sequences=False, input_shape=(3, 257), kernel_initializer='lecun_uniform'))(bl1)
-        # bl2 = BatchNormalization()(bl2)
+        bl2 = BatchNormalization(beta_initializer='random_uniform',
+                 gamma_initializer='random_uniform',
+                 moving_mean_initializer='random_uniform',
+                 moving_variance_initializer='random_uniform')(bl2)
         output_mask_layer = Dense(action_size, kernel_initializer='lecun_uniform')(bl2)
         # kernel_initializer=initializers.random_normal(stddev=0.05)
         # output_mask_layer = BatchNormalization()(output_mask_layer)
-        output_mask_layer = Activation('sigmoid')(output_mask_layer)
+        # output_mask_layer = Activation('sigmoid')(output_mask_layer)
         model = Model(input=S, output=output_mask_layer)
 
         return model, model.trainable_weights, S
