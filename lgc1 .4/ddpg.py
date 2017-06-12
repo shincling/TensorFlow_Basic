@@ -165,6 +165,7 @@ def speech_separate(train_indicator=0):         #train_indicator = 0 means simpl
                 # print('a_for_grad', a_for_grad[0:5])
                 grads = critic.gradients(states, a_for_grad)
                 #得到的grads是BS*257，不知道这个257的意义是啥，怎么弄初来的。
+                print('a_for_grad',a_for_grad[0:5])
                 print('grads', grads[0:5])
                 print('grads', grads.shape)
                 actor.train(states,grads)

@@ -17,11 +17,11 @@ class ActorNetwork(object):
         self.model, self.weights, self.state = self.create_actor_network(state_size, action_size)
         self.target_model, self.target_weights, self.target_state = self.create_actor_network(state_size, action_size)
         self.action_gradient = tf.placeholder(tf.float32,[None, action_size])
-        self.params_grad = tf.gradients(self.model.output, self.weights, self.action_gradient)
+        self.params_grad = tf.gradients(self.model.output, self.weights, -self.action_gradient)
         grads = zip(self.params_grad, self.weights)
-        # self.optimize = tf.train.AdamOptimizer(LEARNING_RATE).apply_gradients(grads)
+        self.optimize = tf.train.AdamOptimizer(LEARNING_RATE).apply_gradients(grads)
         # self.optimize = tf.train.AdadeltaOptimizer(LEARNING_RATE).apply_gradients(grads)
-        self.optimize = tf.train.AdadeltaOptimizer(LEARNING_RATE).apply_gradients(grads)
+        # self.optimize = tf.train.AdadeltaOptimizer(LEARNING_RATE).apply_gradients(grads)
         self.sess.run(tf.global_variables_initializer())
 
     def train(self, states,action_grads):
@@ -80,17 +80,20 @@ class ActorNetwork(object):
         # model = Model(input=S, output=x3)
 
         S = Input(shape=[3, state_size//3])
-        bl1 = Bidirectional(LSTM(100, return_sequences=True, input_shape=(3, 257), kernel_initializer='lecun_uniform'))(S)
+        bl1 = Bidirectional(LSTM(100, return_sequences=True, input_shape=(3, 257), kernel_initializer=initializers.random_uniform(minval=-0.5,maxval=0)))(S)
+        # bl1 = Bidirectional(LSTM(100, return_sequences=True, input_shape=(3, 257), kernel_initializer='lecun_uniform'))(S)
         # kernel_initializer='random_uniform'
-        bl2 = Bidirectional(LSTM(100, return_sequences=False, input_shape=(3, 257), kernel_initializer='lecun_uniform'))(bl1)
-        bl2 = BatchNormalization(beta_initializer='random_uniform',
-                 gamma_initializer='random_uniform',
-                 moving_mean_initializer='random_uniform',
-                 moving_variance_initializer='random_uniform')(bl2)
-        output_mask_layer = Dense(action_size, kernel_initializer='lecun_uniform')(bl2)
+        bl2 = Bidirectional(LSTM(100, return_sequences=False, input_shape=(3, 257), kernel_initializer=initializers.random_uniform(minval=0,maxval=0.5)))(bl1)
+        # bl2 = Bidirectional(LSTM(100, return_sequences=False, input_shape=(3, 257), kernel_initializer='lecun_uniform'))(bl1)
+        # bl2 = BatchNormalization(beta_initializer='random_uniform',
+        #          gamma_initializer='random_uniform',
+        #          moving_mean_initializer='random_uniform',
+        #          moving_variance_initializer='random_uniform')(bl2)
+        # output_mask_layer = Dense(action_size, kernel_initializer='lecun_uniform')(bl2)
+        output_mask_layer = Dense(action_size, kernel_initializer=initializers.random_normal(-1,0.5))(bl2)
         # kernel_initializer=initializers.random_normal(stddev=0.05)
         # output_mask_layer = BatchNormalization()(output_mask_layer)
-        # output_mask_layer = Activation('sigmoid')(output_mask_layer)
+        output_mask_layer = Activation('sigmoid')(output_mask_layer)
         model = Model(input=S, output=output_mask_layer)
 
         return model, model.trainable_weights, S
